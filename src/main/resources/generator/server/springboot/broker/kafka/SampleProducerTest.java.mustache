@@ -1,0 +1,56 @@
+package {{packageName}}.sample.infrastructure.secondary.kafka.producer;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import {{packageName}}.UnitTest;
+
+@UnitTest
+class SampleProducerTest {
+
+  private SampleProducer sampleProducer;
+  private MockProducer mockProducer;
+
+  @BeforeEach
+  public void setUp() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    mockProducer = new MockProducer<>(true, new StringSerializer(), new StringSerializer());
+    sampleProducer = new SampleProducer("queue.jhipster.sample", mockProducer);
+    Method postConstruct = SampleProducer.class.getDeclaredMethod("init");
+    postConstruct.setAccessible(true);
+    postConstruct.invoke(sampleProducer);
+  }
+
+  @Test
+  void shouldSend() {
+    sampleProducer.send("sample message");
+
+    assertThat(mockProducer.history()).hasSize(1);
+    assertThat(((ProducerRecord) mockProducer.history().get(0)).value()).isEqualTo("sample message");
+  }
+
+  @Test
+  void shouldNotSend() {
+    MockProducer<String, String> mockProducer = new MockProducer<>(false, new StringSerializer(), new StringSerializer());
+
+    sampleProducer = new SampleProducer("queue.jhipster.sample", mockProducer);
+    final Future<RecordMetadata> producerRecord = sampleProducer.send("sample message");
+    RuntimeException expectedException = new RuntimeException();
+    mockProducer.errorNext(expectedException);
+
+    try {
+      producerRecord.get();
+    } catch (ExecutionException | InterruptedException ex) {
+      assertThat(ex.getCause()).isEqualTo(expectedException);
+    }
+    assertThat(producerRecord.isDone()).isTrue();
+  }
+}

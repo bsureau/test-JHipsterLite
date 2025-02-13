@@ -1,0 +1,29 @@
+package {{packageName}}.sample.application;
+
+import static org.assertj.core.api.Assertions.*;
+import static {{packageName}}.sample.domain.beer.BeersFixture.*;
+import static {{packageName}}.shared.kipe.application.TestAuthentications.*;
+
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import {{packageName}}.UnitTest;
+import {{packageName}}.shared.kipe.application.AccessContext;
+import {{packageName}}.shared.kipe.application.{{ baseName }}Authorizations;
+
+@UnitTest
+class BeerToCreateAccessCheckerTest {
+
+  private static final BeerToCreateAccessChecker checker = new BeerToCreateAccessChecker(
+    new {{ baseName }}Authorizations(List.of(new BeersAccessesConfiguration().beersAccesses()))
+  );
+
+  @Test
+  void shouldNotAuthorizedUnauthorizedAction() {
+    assertThat(checker.can(AccessContext.of(admin(), "unauthorized", beerToCreate()))).isFalse();
+  }
+
+  @Test
+  void shouldAuthorizedAuthorizedAction() {
+    assertThat(checker.can(AccessContext.of(admin(), "create", beerToCreate()))).isTrue();
+  }
+}

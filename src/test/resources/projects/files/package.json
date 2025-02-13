@@ -1,0 +1,23 @@
+{
+  "name": "test",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Test",
+  "license": "UNLICENSED",
+  "scripts": {
+    "prepare": "husky",
+    "prettier:check": "prettier --check .",
+    "prettier:format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@prettier/plugin-xml": "2.2.0",
+    "husky": "8.0.1",
+    "lint-staged": "13.0.3",
+    "prettier": "2.7.1",
+    "prettier-plugin-java": "1.6.2",
+    "prettier-plugin-packagejson": "2.2.18"
+  },
+  "engines": {
+    "node": ">=16.16.0"
+  }
+}

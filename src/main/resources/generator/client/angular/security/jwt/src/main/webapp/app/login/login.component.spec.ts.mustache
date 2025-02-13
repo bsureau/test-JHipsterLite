@@ -1,0 +1,106 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of, Subject, throwError } from 'rxjs';
+import { Account } from '../auth/account.model';
+import { AccountService } from '../auth/account.service';
+import { LoginService } from './login.service';
+
+import LoginComponent from './login.component';
+
+describe('Login Component', () => {
+  let comp: LoginComponent;
+  let fixture: ComponentFixture<LoginComponent>;
+  let mockAccountService: AccountService;
+  let mockLoginService: LoginService;
+  const account: Account = {
+    activated: true,
+    authorities: [],
+    email: '',
+    firstName: null,
+    langKey: '',
+    lastName: null,
+    login: 'login',
+  };
+
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: LoginService,
+          useValue: {
+            login: jest.fn(() => of({})),
+            logout: jest.fn(() => of({})),
+          },
+        },
+      ],
+    })
+      .overrideTemplate(LoginComponent, '')
+      .compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(LoginComponent);
+    comp = fixture.componentInstance;
+    mockLoginService = TestBed.inject(LoginService);
+    mockAccountService = TestBed.inject(AccountService);
+  });
+
+  describe('ngOnInit', () => {
+    it('should check authentication', () => {
+      const authenticationState = new Subject<Account | null>();
+      mockAccountService.getAuthenticationState = jest.fn(() => authenticationState.asObservable());
+
+      comp.ngOnInit();
+
+      expect(mockAccountService.getAuthenticationState).toHaveBeenCalled();
+
+      expect(comp.account()).toBeNull();
+
+      authenticationState.next(account);
+
+      expect(comp.account()).toEqual(account);
+
+      authenticationState.next(null);
+
+      expect(comp.account()).toBeNull();
+    });
+  });
+
+  describe('login', () => {
+    it('should authenticate the user', () => {
+      const credentials = {
+        username: 'admin',
+        password: 'admin',
+      };
+
+      comp.loginForm.patchValue({
+        username: 'admin',
+        password: 'admin',
+      });
+
+      comp.login();
+
+      expect(mockLoginService.login).toHaveBeenCalledWith(credentials);
+    });
+
+    it('should not authenticate the user', () => {
+      const err = { status: 403 };
+      jest.spyOn(mockLoginService, 'login').mockReturnValue(throwError(() => err));
+
+      comp.login();
+
+      expect(comp.errorMessage()).toBe('Authentication failed');
+    });
+  });
+
+  describe('logout', () => {
+    it('should logout the user', () => {
+      comp.logout();
+
+      expect(mockLoginService.logout).toHaveBeenCalled();
+    });
+  });
+});

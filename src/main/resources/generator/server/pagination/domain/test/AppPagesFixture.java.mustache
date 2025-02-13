@@ -1,0 +1,17 @@
+package {{packageName}}.shared.pagination.domain;
+
+import java.util.List;
+import {{packageName}}.shared.pagination.domain.{{baseName}}Page.{{baseName}}PageBuilder;
+
+public final class {{baseName}}PagesFixture {
+
+  private {{baseName}}PagesFixture() {}
+
+  public static {{baseName}}Page<String> page() {
+    return pageBuilder().build();
+  }
+
+  public static {{baseName}}PageBuilder<String> pageBuilder() {
+    return {{baseName}}Page.builder(List.of("test")).currentPage(2).pageSize(10).totalElementsCount(21);
+  }
+}

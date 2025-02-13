@@ -1,0 +1,40 @@
+@use '../../quark/quark';
+@use '../../token/breakpoint';
+
+.jhlite-logo {
+  @include quark.jhlite-q-link-light;
+
+  /* stylelint-disable-next-line no-duplicate-selectors */
+  & {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  &--icon {
+    width: 2.5rem;
+  }
+
+  &--text {
+    display: none;
+    font-family: Pacifico, cursive;
+    font-size: 1.2rem;
+  }
+
+  &-version--text {
+    font-size: 0.7rem;
+  }
+}
+
+@media screen and (min-width: breakpoint.$jhlite-global-breakpoint-small-medium) {
+  .jhlite-logo {
+    &--icon {
+      width: 48px;
+    }
+
+    &--text {
+      display: block;
+    }
+  }
+}

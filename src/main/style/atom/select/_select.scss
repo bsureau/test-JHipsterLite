@@ -1,0 +1,37 @@
+@use '../../token/colors';
+@use '../../token/size';
+@use 'sass:math';
+@use 'sass:color';
+
+$jhlite-select-color-background: rgba(colors.$jhlite-global-color-fill-light, 0);
+$jhlite-select-color-text: colors.$jhlite-global-color-text-dark;
+$jhlite-select-color-border: colors.$jhlite-global-color-field-border;
+$jhlite-select-color-border-focus: colors.$jhlite-global-color-field-border-focus;
+$jhlite-select-size-field-border-focus: size.$jhlite-global-size-field-border-focus;
+$jhlite-select-disabled-color-background: colors.$jhlite-global-color-fill-disabled-light;
+$jhlite-select-padding: math.div(9, 16) * 1rem math.div(1, 16) * 1rem math.div(9, 16) * 1rem math.div(13, 16) * 1rem;
+$jhlite-select-radius: size.$jhlite-global-size-field-radius;
+$jhlite-select-line-height: 1.5rem !default;
+$jhlite-select-font-size: 1rem !default;
+
+.jhlite-select {
+  border: size.$jhlite-global-size-field-border solid colors.$jhlite-global-color-field-border;
+  border-radius: $jhlite-select-radius;
+  background-color: var(--jhlite-chip-bg-color);
+  cursor: pointer;
+  padding: $jhlite-select-padding;
+  line-height: $jhlite-select-line-height;
+  color: var(--jhlite-global-color-text);
+  font-size: $jhlite-select-font-size;
+
+  &:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: 0 0 0 $jhlite-select-size-field-border-focus $jhlite-select-color-border-focus;
+  }
+
+  &:disabled {
+    background-color: $jhlite-select-disabled-color-background;
+    cursor: not-allowed;
+  }
+}

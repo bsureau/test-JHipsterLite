@@ -1,0 +1,17 @@
+@use '../../quark/placeholder';
+
+.page-title {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 3rem;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+
+  @include placeholder.placeholder-alternative {
+    max-width: 20rem;
+    min-height: 3rem;
+  }
+}

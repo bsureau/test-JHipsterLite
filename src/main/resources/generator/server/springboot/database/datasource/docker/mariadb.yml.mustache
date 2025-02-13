@@ -1,0 +1,13 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+services:
+  mariadb:
+    image: {{mariadbDockerImageWithVersion}}
+    # volumes:
+    #   - ~/volumes/jhipster/{{baseName}}/mariadb/:/var/lib/mysql/
+    environment:
+      - MYSQL_DATABASE={{baseName}}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    # If you want to expose these ports outside your dev PC,
+    # remove the "127.0.0.1:" prefix
+    ports:
+      - '127.0.0.1:3306:3306'

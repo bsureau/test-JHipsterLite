@@ -1,0 +1,23 @@
+name: 'Setup'
+description: 'Setup environment with Java 21, Node 20'
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Setup: Node.js'
+      uses: actions/setup-node@v4
+      with:
+        node-version: {{nodeVersion}}
+    - name: 'Setup: update NPM'
+      shell: bash
+      run: npm install -g npm
+    - name: 'Setup: Java'
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: {{javaVersion}}
+    - name: 'Setup: check tools'
+      shell: bash
+      run: |
+        node -v
+        npm -v
+        java -version

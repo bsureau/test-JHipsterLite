@@ -1,0 +1,25 @@
+<mat-card appearance="raised">
+  <mat-card-content>
+    @if (account(); as accountRef) {
+      <div>
+        <div>You are logged in as user "{{ accountRef.login }}".</div>
+        <button (click)="logout()" mat-flat-button color="primary">Logout</button>
+      </div>
+    } @else {
+      <form class="login-form" (ngSubmit)="login()" [formGroup]="loginForm">
+        <mat-form-field class="form-field-full-width" appearance="fill">
+          <mat-label>Login</mat-label>
+          <input type="text" name="username" id="username" formControlName="username" matInput placeholder="Login" value="" />
+        </mat-form-field>
+        <mat-form-field class="form-field-full-width" appearance="fill">
+          <mat-label>Password</mat-label>
+          <input type="password" name="password" id="password" formControlName="password" matInput placeholder="Password" value="" />
+        </mat-form-field>
+        <button type="submit" mat-flat-button color="primary">Sign in</button>
+        @if (errorMessage()) {
+          <mat-error>{{ errorMessage() }}</mat-error>
+        }
+      </form>
+    }
+  </mat-card-content>
+</mat-card>

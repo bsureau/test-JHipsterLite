@@ -1,0 +1,43 @@
+@use '../../token/breakpoint';
+
+.jhlite-icon-text {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: center;
+
+  &--icon {
+    font-size: 1.5rem;
+  }
+
+  &--text {
+    font-size: 0.8rem;
+
+    &.-lg-only {
+      display: none;
+    }
+  }
+}
+
+@media screen and (min-width: breakpoint.$jhlite-global-breakpoint-medium-large) {
+  .jhlite-icon-text {
+    &--text.-lg-only {
+      display: block;
+    }
+  }
+}
+
+@media screen and (min-width: breakpoint.$jhlite-global-breakpoint-small-medium) {
+  .jhlite-icon-text {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+}
+
+@media screen and (min-width: breakpoint.$jhlite-global-breakpoint-medium-large) {
+  .jhlite-icon-text {
+    &--text {
+      font-size: 1rem;
+    }
+  }
+}

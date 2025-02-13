@@ -1,0 +1,85 @@
+#====================================================================
+# Standard Spring Boot properties.
+# Full reference is available at:
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+#====================================================================
+springdoc:
+  swagger-ui:
+    operationsSorter: alpha,beta
+    tagsSorter: alpha
+    tryItOutEnabled: true
+  enable-native-support: true
+
+management:
+  # Spring Boot Actuator
+  endpoints:
+    web:
+      exposure:
+        include:
+          - configprops
+          - env
+          - health
+          - info
+          - logfile
+          - loggers
+          - threaddump
+      base-path: /management
+  # Git Information
+  info:
+    git:
+      mode: full
+      enabled: true
+    env:
+      enabled: true
+  endpoint:
+    health:
+      group:
+        readiness:
+          include: readinessState
+        liveness:
+          include: livenessState
+      probes:
+        enabled: true
+
+application:
+  # Cors configuration
+  cors:
+    allowed-headers: '*'
+    allowed-origin-patterns: https://*.githubpreview.dev
+    max-age: 1800
+    allowed-methods: '*'
+    allowed-origins:
+      - http://localhost:8100
+      - http://localhost:9000
+      - http://localhost:3000
+    allow-credentials: true
+    exposed-headers:
+      - Authorization
+      - Link
+      - X-Total-Count
+      - X-jhlite-alert
+      - X-jhlite-error
+      - X-jhlite-params
+  version: '@project.version@'
+  cmd:
+    timeout: 120
+
+jhlite:
+  #  forced-project-folder: /tmp/jhlite
+  hidden-resources:
+    slugs:
+      - svelte-core
+  preset-file:
+    name: preset.json
+
+server:
+  port: 7471
+
+spring:
+  threads:
+    virtual:
+      enabled: true
+  jackson:
+    default-property-inclusion: non_absent
+  application:
+    name: jhlite

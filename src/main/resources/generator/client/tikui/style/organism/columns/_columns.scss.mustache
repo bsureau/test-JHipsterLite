@@ -1,0 +1,19 @@
+@use '../../quark/spacing';
+
+.columns {
+  --columns-gap: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--columns-gap);
+
+  &.-justify-center {
+    justify-content: center;
+  }
+
+  &.-align-center {
+    align-items: center;
+  }
+
+  @include spacing.spacing-alternatives('gap-', '--columns-gap');
+}

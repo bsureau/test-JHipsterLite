@@ -1,0 +1,5 @@
+mixin paragraph(options)
+  - const { placeholder } = options || {};
+  - const placeholderClass = placeholder ? '-placeholder' : null;
+  p.paragraph(class=placeholderClass)
+    block

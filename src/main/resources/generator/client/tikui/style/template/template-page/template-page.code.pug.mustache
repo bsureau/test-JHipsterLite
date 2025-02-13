@@ -1,0 +1,41 @@
+include template-page.mixin.pug
+
+include /atom/button/button.mixin.pug
+include /atom/input-text/input-text.mixin.pug
+include /atom/page-title/page-title.mixin.pug
+include /atom/paragraph/paragraph.mixin.pug
+include /molecule/field/field.mixin.pug
+include /organism/columns/columns.mixin.pug
+include /organism/lines/lines.mixin.pug
+
++template-page
+  +lines('title-and-text')
+    +lines-line
+      +page-title Title
+    +lines-line
+      +paragraph
+        | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        | Etiam at massa a ipsum rhoncus posuere. Aenean id scelerisque tortor. Etiam vulputate finibus imperdiet.
+        | Phasellus ac tellus ac felis efficitur convallis. Vestibulum quis viverra libero, in accumsan neque.
+        | Donec pulvinar metus mollis, bibendum orci et, lobortis nulla.
+        | Proin dignissim euismod scelerisque. Ut eu ultrices ipsum.
+        | Quisque iaculis nibh ac nulla pretium ullamcorper. Aenean at magna risus.
+    +lines-line
+      +paragraph
+        | Suspendisse potenti. Donec euismod, ligula sit amet lobortis condimentum, ligula nulla aliquam quam,
+        | at egestas tortor risus sed est. Nulla sed dapibus nulla, ut bibendum dolor.
+        | Suspendisse potenti. Vivamus vehicula lacus vitae semper fermentum. Mauris aliquet mi et placerat mollis.
+        | Aenean nibh arcu, suscipit quis porta eget, auctor non lectus. Nullam aliquet suscipit mauris sit amet sagittis.
+    +lines-line
+      +columns('paragraphs', { justify: 'center' })
+        +columns--column
+          form
+            +lines('paragraphs')
+              +lines-line
+                +field('Firstname', { forId: 'firstname' })
+                  +input-text({ id: 'firstname', placeholder: 'Firstname' })
+              +lines-line
+                +field('Lastname', { forId: 'lastname' })
+                  +input-text({ id: 'lastname', placeholder: 'Lastname' })
+              +lines-line({ align: 'end' })
+                +button({ type: 'submit' }) Subscribe

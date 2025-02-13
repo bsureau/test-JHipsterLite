@@ -1,0 +1,24 @@
+package {{ packageName }}.shared.slug.domain;
+
+import tech.jhipster.lite.module.domain.resource.JHipsterFeatureSlugFactory;
+import {{packageName}}.shared.generation.domain.ExcludeFromGeneratedCodeCoverage;
+
+@ExcludeFromGeneratedCodeCoverage
+public enum {{ baseName }}FeatureSlug implements JHipsterFeatureSlugFactory {
+
+  // Add here the slugs of your features
+  // e.g.: MY_FEATURE("my-feature")
+  ;
+
+  private final String slug;
+
+  @SuppressWarnings("java:S1144")
+  {{ baseName }}FeatureSlug(String slug) {
+    this.slug = slug;
+  }
+
+  @Override
+  public String get() {
+    return slug;
+  }
+}

@@ -1,0 +1,90 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  #--------------------------------------------------
+  # Build and Tests the project
+  #--------------------------------------------------
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: cache local Maven repository'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Lint: check'
+        run: npm run lint:ci
+      - name: 'Test: run backend tests'
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify
+          ARTIFACT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          rm target/*${ARTIFACT_VERSION}.jar
+          rm target/*${ARTIFACT_VERSION}-javadoc.jar
+          rm target/*${ARTIFACT_VERSION}-sources.jar
+          rm target/*${ARTIFACT_VERSION}-tests.jar
+          mv target/jhlite-${ARTIFACT_VERSION}-exec.jar target/jhlite-${ARTIFACT_VERSION}.jar
+      - name: 'Artifact: upload JAR'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jhlite-jar
+          path: '${{ github.workspace }}/target/*.jar'
+          retention-days: 1
+  #--------------------------------------------------
+  # Release
+  #--------------------------------------------------
+  release:
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    name: release
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+      - name: 'Artifact: download JAR'
+        uses: actions/download-artifact@v4
+        with:
+          name: jhlite-jar
+          path: ./target/
+      - name: 'Release: get variables from artifact'
+        id: artifact_variables
+        run: |
+          ARTIFACT_PATHNAME=$(ls target/*.jar | head -n 1)
+          ARTIFACT_NAME=$(basename $ARTIFACT_PATHNAME)
+          ARTIFACT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "artifact_asset_name=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
+          echo "artifact_asset_path=${ARTIFACT_PATHNAME}" >> $GITHUB_OUTPUT
+          echo "artifact_version=${ARTIFACT_VERSION}" >> $GITHUB_OUTPUT
+      - name: 'Release: publish release drafter'
+        uses: release-drafter/release-drafter@v6
+        id: release-drafter-final
+        with:
+          publish: true
+          tag: v${{ steps.artifact_variables.outputs.artifact_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Release: upload artifact'
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release-drafter-final.outputs.upload_url }}
+          asset_name: ${{ steps.artifact_variables.outputs.artifact_asset_name }}
+          asset_path: ${{ steps.artifact_variables.outputs.artifact_asset_path }}
+          asset_content_type: application/java-archive

@@ -1,0 +1,14 @@
+@use '../../token/colors';
+@use '../../token/size';
+
+$jhlite-mode-switch-line-color: colors.$jhlite-global-line-color;
+$jhlite-mode-switch-radius: size.$jhlite-global-size-switch-radius;
+
+.jhlite-mode-switch {
+  display: flex;
+
+  &--modes {
+    border: 1px solid $jhlite-mode-switch-line-color;
+    border-radius: $jhlite-mode-switch-radius;
+  }
+}

@@ -1,0 +1,22 @@
+@use '../../variables/breakpoint';
+
+.template-page {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-background-page);
+  overflow: auto;
+
+  &--content {
+    box-sizing: border-box;
+    margin: 0 auto;
+    background-color: var(--color-background);
+    padding: var(--spacing-l);
+    width: 100%;
+    max-width: var(--content-width);
+    min-height: 100vh;
+
+    @media screen and (width >= #{breakpoint.$large}) {
+      padding: var(--spacing-l) 5rem;
+    }
+  }
+}

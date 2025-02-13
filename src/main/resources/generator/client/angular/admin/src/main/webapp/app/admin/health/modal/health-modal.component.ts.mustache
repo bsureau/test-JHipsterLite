@@ -1,0 +1,38 @@
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+
+import { HealthDetails } from '../health.model';
+
+@Component({
+  selector: 'jhi-health-modal',
+  templateUrl: './health-modal.component.html',
+  imports: [CommonModule, MatDialogModule, MatIconModule, MatButtonModule, MatTableModule],
+  styleUrl: './health-modal.component.css',
+})
+export class HealthModalComponent {
+  GIGABYTE = 1073741824;
+  MEGABYTE = 1048576;
+  displayedColumns: string[] = ['key', 'value'];
+
+  healthDetails: HealthDetails = inject(MAT_DIALOG_DATA);
+
+  readableValue(value: any): string {
+    if (this.healthDetails.key === 'diskSpace') {
+      // Should display storage space in a human readable unit
+      const val = value / this.GIGABYTE;
+      if (val > 1) {
+        return `${val.toFixed(2)} GB`;
+      }
+      return `${(value / this.MEGABYTE).toFixed(2)} MB`;
+    }
+
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+}

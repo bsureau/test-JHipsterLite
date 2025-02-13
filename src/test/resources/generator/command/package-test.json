@@ -1,0 +1,14 @@
+{
+  "name": "jhlitetest",
+  "version": "0.0.1",
+  "scripts": {
+    "prettier:check": "prettier --check .",
+    "prettier:format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier-plugin-java": "1.6.1"
+  },
+  "engines": {
+    "node": ">=14.18.1"
+  }
+}

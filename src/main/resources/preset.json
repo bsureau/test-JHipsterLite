@@ -1,0 +1,51 @@
+{
+  "presets": [
+    {
+      "name": "Java Library with Maven",
+      "modules": [
+        "init",
+        "application-service-hexagonal-architecture-documentation",
+        "maven-java",
+        "maven-wrapper",
+        "prettier",
+        "java-base",
+        "checkstyle",
+        "jacoco-with-min-coverage-check"
+      ]
+    },
+    {
+      "name": "Webapp: Vue + Spring Boot",
+      "modules": [
+        "init",
+        "application-service-hexagonal-architecture-documentation",
+        "maven-java",
+        "maven-wrapper",
+        "prettier",
+        "vue-core",
+        "java-base",
+        "checkstyle",
+        "jacoco-with-min-coverage-check",
+        "spring-boot",
+        "spring-boot-mvc-empty",
+        "logs-spy",
+        "spring-boot-tomcat",
+        "frontend-maven-plugin"
+      ]
+    },
+    {
+      "name": "JHLite Extension with Maven",
+      "modules": [
+        "init",
+        "application-service-hexagonal-architecture-documentation",
+        "maven-java",
+        "maven-wrapper",
+        "prettier",
+        "java-base",
+        "checkstyle",
+        "jacoco-with-min-coverage-check",
+        "spring-boot",
+        "custom-jhlite"
+      ]
+    }
+  ]
+}

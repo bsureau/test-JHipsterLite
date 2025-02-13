@@ -1,0 +1,15 @@
+name: Release Drafter
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  update_release_draft:
+    if: github.repository == 'jhipster/jhipster-lite'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        id: release-drafter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,7 @@
+include /atom/button/button-switch/button-switch.mixin.pug
+
+mixin jhlite-mode-switch(selectedOptionLabel, unselectedOptionLabel)
+  .jhlite-mode-switch
+    .jhlite-mode-switch--modes
+      +jhlite-button-switch({selected: true})= selectedOptionLabel
+      +jhlite-button-switch= unselectedOptionLabel

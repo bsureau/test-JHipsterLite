@@ -1,0 +1,38 @@
+name: 'Setup'
+description: 'Setup environment with Java and Node'
+inputs:
+  java-version:
+    description: 'Java version to use'
+    required: true
+    default: '21'
+  node-version:
+    description: 'Node version to use'
+    required: true
+    default: 'lts/*'
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Setup: Node.js'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '${{ inputs.node-version }}'
+        check-latest: true
+    - name: 'Setup: update NPM'
+      shell: bash
+      run: npm install -g npm
+    - name: 'Setup: Java ${{ inputs.java-version }}'
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '${{ inputs.java-version }}'
+        check-latest: true
+    - name: 'Disable maven interactive mode'
+      shell: bash
+      run: |
+        sed -i 's/<servers>/<interactiveMode>false\<\/interactiveMode>\n  <servers>/g' ~/.m2/settings.xml
+    - name: 'Setup: check tools'
+      shell: bash
+      run: |
+        node -v
+        npm -v
+        java -version

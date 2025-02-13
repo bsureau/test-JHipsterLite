@@ -1,0 +1,27 @@
+variables:
+  # This will suppress any download for dependencies and plugins or upload messages which would clutter the console log.
+  # `showDateTime` will show the passed time in milliseconds.
+  GRADLE_OPTS: '-Dhttps.protocols=TLSv1.2 -Djava.awt.headless=true'
+  # In Gradle, you can centralize common configuration options in the `gradle.properties` file or
+  # within the `build.gradle` scripts. This ensures consistency when running Gradle tasks either from the command line or in CI environments.
+  # Options like `--no-daemon` and `--quiet` are command-line specific. `--no-daemon` is useful in CI environments to avoid background processes,
+  # and `--quiet` reduces output verbosity, showing only errors.
+  GRADLE_CLI_OPTS: ' --no-daemon --quiet'
+
+image: eclipse-temurin:{{javaVersion}}
+
+# Cache downloaded dependencies and wrapper between builds.
+# To keep cache across branches add 'key: "$CI_JOB_NAME"'
+cache:
+  paths:
+    - .gradle/caches
+    - .gradle/wrapper
+
+stages:
+  - test
+
+Test:run-tests:
+  stage: test
+  script:
+    - ./gradlew clean integrationTest $GRADLE_CLI_OPTS
+  interruptible: true

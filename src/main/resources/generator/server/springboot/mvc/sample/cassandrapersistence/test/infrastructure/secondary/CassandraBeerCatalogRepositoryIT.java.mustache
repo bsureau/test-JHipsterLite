@@ -1,0 +1,23 @@
+package {{ packageName }}.sample.infrastructure.secondary;
+
+import {{ packageName }}.IntegrationTest;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import static {{ packageName }}.sample.domain.BeersIdentityFixture.cloackOfFeathersId;
+import static {{ packageName }}.sample.domain.beer.BeersFixture.beer;
+import static org.assertj.core.api.Assertions.assertThat;
+
+@IntegrationTest
+class CassandraBeerCatalogRepositoryIT {
+
+  @Autowired
+  private CassandraBeerCatalogRepository beerCatalog;
+
+  @Test
+  void shouldSaveAndGetBeer() {
+    beerCatalog.save(BeerCatalogTable.from(beer()));
+
+    assertThat(beerCatalog.findById(cloackOfFeathersId().get()).orElseThrow().toDomain()).usingRecursiveComparison().isEqualTo(beer());
+  }
+}

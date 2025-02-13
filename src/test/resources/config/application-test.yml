@@ -1,0 +1,26 @@
+#====================================================================
+# Standard Spring Boot properties.
+# Full reference is available at:
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+#====================================================================
+
+application:
+  cors:
+    allowed-origins:
+      - http://localhost:8100
+      - http://localhost:9000
+
+jhlite:
+  hidden-resources:
+    slugs:
+    tags:
+  preset-file:
+    name: preset.json
+
+server:
+  port: 0
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+    banner-mode: 'off'

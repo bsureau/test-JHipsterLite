@@ -1,0 +1,1 @@
+## Landscape preset configuration

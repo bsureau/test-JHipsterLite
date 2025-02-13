@@ -1,0 +1,3 @@
+# Label all new issues or PRs for area: triage
+'area: triage':
+  - '/.*/'

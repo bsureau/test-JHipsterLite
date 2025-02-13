@@ -1,0 +1,22 @@
+@use '../../token/breakpoint';
+
+$jhlite-toast-overlay-padding: 2vw;
+$jhlite-toast-overlay-medium-padding: 20px;
+
+.jhlite-toast-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  padding: 2vw;
+}
+
+@media screen and (min-width: breakpoint.$jhlite-global-breakpoint-small-medium) {
+  .jhlite-toast-overlay {
+    top: auto;
+    right: auto;
+    bottom: 0;
+    padding: 20px;
+  }
+}

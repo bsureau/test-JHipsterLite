@@ -1,0 +1,16 @@
+application:
+  cors:
+    allowed-origins:
+      - https://lite.jhipster.tech
+      - https://jhipster-lite.ew.r.appspot.com
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count'
+    allow-credentials: true
+    max-age: 1800
+
+jhlite:
+  forced-project-folder: /tmp/jhlite
+
+server:
+  port: 8080

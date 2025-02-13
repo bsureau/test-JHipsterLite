@@ -1,0 +1,40 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { AuthServerProvider } from './auth-jwt.service';
+
+describe('Auth JWT', () => {
+  let service: AuthServerProvider;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+
+    httpMock = TestBed.inject(HttpTestingController);
+    service = TestBed.inject(AuthServerProvider);
+  });
+
+  describe('Login', () => {
+    it('should clear session storage and save in local storage', () => {
+      jest.spyOn(Storage.prototype, 'setItem');
+
+      service.login({ username: 'John', password: '123' }).subscribe();
+      httpMock.expectOne('api/authenticate').flush({ id_token: '1' });
+
+      httpMock.verify();
+      expect(localStorage.setItem).toHaveBeenCalledWith('authenticationToken', '1');
+    });
+  });
+
+  describe('Logout', () => {
+    it('should clear storage', () => {
+      jest.spyOn(Storage.prototype, 'removeItem');
+
+      service.logout().subscribe();
+
+      expect(localStorage.removeItem).toHaveBeenCalledWith('authenticationToken');
+    });
+  });
+});

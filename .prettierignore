@@ -1,0 +1,9 @@
+target/
+package-lock.json
+template-infinitest.filters
+Dockerfile
+.gitattributes
+mvnw
+gradlew
+.husky/_/
+src/test/resources/**/*.approved.txt

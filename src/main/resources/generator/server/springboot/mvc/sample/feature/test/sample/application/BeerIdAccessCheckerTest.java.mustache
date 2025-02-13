@@ -1,0 +1,29 @@
+package {{packageName}}.sample.application;
+
+import static org.assertj.core.api.Assertions.*;
+import static {{packageName}}.sample.domain.BeersIdentityFixture.*;
+import static {{packageName}}.shared.kipe.application.TestAuthentications.*;
+
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import {{packageName}}.UnitTest;
+import {{packageName}}.shared.kipe.application.AccessContext;
+import {{packageName}}.shared.kipe.application.{{ baseName }}Authorizations;
+
+@UnitTest
+class BeerIdAccessCheckerTest {
+
+  private static final BeerIdAccessChecker checker = new BeerIdAccessChecker(
+    new {{ baseName }}Authorizations(List.of(new BeersAccessesConfiguration().beersAccesses()))
+  );
+
+  @Test
+  void shouldNotAuthorizedUnauthorizedAction() {
+    assertThat(checker.can(AccessContext.of(admin(), "unauthorized", cloackOfFeathersId()))).isFalse();
+  }
+
+  @Test
+  void shouldAuthorizedAuthorizedAction() {
+    assertThat(checker.can(AccessContext.of(admin(), "create", cloackOfFeathersId()))).isTrue();
+  }
+}

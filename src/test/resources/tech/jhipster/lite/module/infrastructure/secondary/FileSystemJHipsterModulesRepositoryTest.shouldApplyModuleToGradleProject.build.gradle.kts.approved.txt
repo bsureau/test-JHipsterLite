@@ -1,0 +1,108 @@
+import java.util.Properties
+// jhipster-needle-gradle-imports
+
+plugins {
+  java
+  jacoco
+  checkstyle
+  // jhipster-needle-gradle-plugins
+}
+
+val springProfilesActive by extra("local")
+// jhipster-needle-gradle-properties
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+jacoco {
+  toolVersion = libs.versions.jacoco.get()
+}
+
+tasks.jacocoTestReport {
+  dependsOn("test", "integrationTest")
+  reports {
+    xml.required.set(true)
+    html.required.set(false)
+  }
+  executionData.setFrom(fileTree(buildDir).include("**/jacoco/test.exec", "**/jacoco/integrationTest.exec"))
+}
+
+
+checkstyle {
+  toolVersion = libs.versions.checkstyle.get()
+}
+
+// jhipster-needle-gradle-plugins-configurations
+
+repositories {
+  mavenCentral()
+  // jhipster-needle-gradle-repositories
+}
+
+group = "com.test.myapp"
+version = "0.0.1-SNAPSHOT"
+
+val profiles = (project.findProperty("profiles") as String? ?: "")
+  .split(",")
+  .map { it.trim() }
+  .filter { it.isNotEmpty() }
+if (profiles.contains("local")) {
+  apply(plugin = "profile-local")
+}
+// jhipster-needle-profile-activation
+
+dependencies {
+  implementation(platform(libs.spring.boot.dependencies))
+  implementation(libs.spring.boot.starter)
+  implementation(libs.jjwt.api)
+  implementation(libs.spring.boot.starter.web) {
+    exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
+  }
+  // jhipster-needle-gradle-implementation-dependencies
+  // jhipster-needle-gradle-compile-dependencies
+  // jhipster-needle-gradle-runtime-dependencies
+  testImplementation(libs.commons.lang3)
+  testImplementation(libs.reflections)
+  testImplementation(libs.junit.jupiter.engine)
+  // jhipster-needle-gradle-test-dependencies
+}
+
+
+tasks.build {
+  dependsOn("processResources")
+}
+
+tasks.processResources {
+  filesMatching("**/*.yml", "**/*.properties") {
+    filter {
+      it.replace("@spring.profiles.active@", springProfilesActive)
+    }
+  }
+}
+
+// jhipster-needle-gradle-free-configuration-blocks
+
+tasks.test {
+  filter {
+    includeTestsMatching("**Test*")
+    excludeTestsMatching("**IT*")
+    excludeTestsMatching("**CucumberTest*")
+  }
+  useJUnitPlatform()
+  finalizedBy("jacocoTestReport")
+  // jhipster-needle-gradle-tasks-test
+}
+
+val integrationTest = task<Test>("integrationTest") {
+  description = "Runs integration tests."
+  group = "verification"
+  shouldRunAfter("test")
+  filter {
+    includeTestsMatching("**IT*")
+    includeTestsMatching("**CucumberTest*")
+  }
+  useJUnitPlatform()
+}

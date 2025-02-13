@@ -1,0 +1,9 @@
+include /organism/toasts/toasts.mixin.pug
+
+mixin toasting(orientations)
+  - const orientationsClass = orientations.split(' ').map(orientation => `-${orientation}`).join(' ');
+  .toasting(class=orientationsClass)
+    +toasts
+      +toasts--toast First toast message
+      +toasts--toast Second toast message
+      +toasts--toast Last toast message

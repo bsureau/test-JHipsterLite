@@ -1,0 +1,11 @@
+node_modules/
+src/main/docker/
+src/test/webapp/cypress/
+src/test/webapp/protractor.conf.js
+jest.conf.js
+src/test/webapp/jest.conf.js
+webpack/
+target/
+build/
+node/
+postcss.config.js

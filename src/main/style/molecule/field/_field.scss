@@ -1,0 +1,11 @@
+.jhlite-field {
+  &--optional {
+    text-align: right;
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  &--label {
+    color: var(--jhlite-global-color-text);
+  }
+}

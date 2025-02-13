@@ -1,0 +1,10 @@
+package {{packageName}}.sample.domain.beer;
+
+import {{packageName}}.sample.domain.BeerId;
+
+class UnknownBeerException extends RuntimeException {
+
+  public UnknownBeerException(BeerId id) {
+    super("Beer " + id.get() + " is unknown");
+  }
+}

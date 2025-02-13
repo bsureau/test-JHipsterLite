@@ -1,0 +1,12 @@
+runtime: custom
+env: flex
+resources:
+  cpu: 1
+  memory_gb: 4.0
+  disk_size_gb: 10
+manual_scaling:
+  instances: 1
+env_variables:
+  GCP_PROJECT_ID:
+  GCP_REGION:
+  SPRING_PROFILES_ACTIVE: cloud

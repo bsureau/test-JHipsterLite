@@ -1,0 +1,104 @@
+<ModulesPatchLoaderVue v-if="content.isLoading()" />
+<div class="jhipster-modules-patch jhlite-menu-content-template" v-else data-testid="modules-list">
+  <div class="jhipster-modules-list jhlite-menu-content-template--content">
+    <div class="jhipster-modules-filters">
+      <div class="jhipster-modules-filters--tags">
+        <TagFilterVue tag="init" :isSelected="isTagSelected('init')" @selected="toggleTag('init')" />
+        <TagFilterVue tag="server" :isSelected="isTagSelected('server')" @selected="toggleTag('server')" />
+        <TagFilterVue tag="client" :isSelected="isTagSelected('client')" @selected="toggleTag('client')" />
+      </div>
+
+      <input
+        type="text"
+        class="jhipster-modules-filters--filter"
+        placeholder="Filter"
+        data-testid="modules-filter-field"
+        @input="updateSearch($event.target.value)"
+      />
+
+      <div class="jhipster-modules-filters--displayed-modules-count" data-testid="displayed-modules-count">
+        {{ displayedModulesCount() }}&nbsp;/&nbsp;{{ totalModulesCount() }}
+      </div>
+    </div>
+
+    <div class="jhipster-modules-list--categories">
+      <div v-for="category in content.value().categories">
+        <div>
+          <h2 class="jhipster-module-category--name">{{ category.name }}</h2>
+          <div v-for="module in category.modules" class="jhipster-module" :class="moduleClass(module.slug)">
+            <div
+              class="jhipster-module--content"
+              :class="moduleClass(module.slug)"
+              @click="toggleModule(module.slug)"
+              @keyup.enter="toggleModule(module.slug)"
+              :data-testid="`${module.slug}-module-content`"
+            >
+              <div class="jhipster-module--tags" :class="moduleClass(module.slug)">
+                <div v-for="tag in module.tags" class="jhipster-module--tag">{{ tag }}</div>
+              </div>
+
+              <div class="jhipster-module--slug" :class="moduleClass(module.slug)">{{ module.slug }}</div>
+              <div class="jhipster-module--description" :class="moduleClass(module.slug)">{{ module.description}}</div>
+
+              <ModuleParametersVue
+                propertiesType="MANDATORY"
+                :propertiesDefinitions="mandatoryProperties(module.slug)"
+                :moduleSlug="module.slug"
+                :moduleParameters="moduleParametersValues"
+                :selected="isModuleSelected(module.slug)"
+              />
+              <ModuleParametersVue
+                propertiesType="OPTIONAL"
+                :propertiesDefinitions="optionalProperties(module.slug)"
+                :moduleSlug="module.slug"
+                :moduleParameters="moduleParametersValues"
+                :selected="isModuleSelected(module.slug)"
+              />
+            </div>
+
+            <button
+              class="jhipster-module--apply-button"
+              :class="moduleClass(module.slug)"
+              :disabled="disabledApplication(module.slug)"
+              @click="applyModule(module.slug)"
+              :data-testid="`module-${module.slug}-application-button`"
+            >
+              <span v-if="appliedModule(module.slug)">
+                <IconVue name="ccw" aria-label="Reapply" title="Re-apply module" :data-testid="`module-${module.slug}-application-icon`" />
+              </span>
+              <span v-else>
+                <IconVue name="play" aria-label="Reapply" title="Re-apply module" :data-testid="`module-${module.slug}-application-icon`" />
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="jhlite-menu-content-template--menu">
+    <div class="jhlite-side-menu">
+      <div class="jhlite-side-menu--slot -expand">
+        <ModulePropertiesFormVue
+          :folderPath="folderPath"
+          :properties="selectedModuleProperties()"
+          :parameters="moduleParametersValues"
+          @moduleCommitUpdated="updateModuleCommit"
+          @folderPathUpdated="updateFolderPath"
+          @folderPathSelected="projectFolderUpdated"
+          @propertyUpdated="updateProperty"
+          @propertyDeleted="deleteProperty"
+        />
+      </div>
+
+      <div class="jhlite-side-menu--slot">
+        <ProjectActionsVue
+          :folderPath="folderPath"
+          :isPrettierButtonEnabled="true"
+          @operationStarted="operationStarted()"
+          @operationEnded="operationEnded()"
+        />
+      </div>
+    </div>
+  </aside>
+</div>

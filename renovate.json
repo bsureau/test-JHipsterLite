@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "npm:unpublishSafe",
+    "schedule:daily",
+    ":maintainLockFilesWeekly",
+    ":disableDependencyDashboard",
+    ":automergeMinor",
+    ":automergePr",
+    ":automergeRequireAllStatusChecks",
+    ":label(area: dependencies)"
+  ],
+  "prConcurrentLimit": 20,
+  "prHourlyLimit": 20,
+  "ignorePaths": ["**/node_modules/**", "**/test/**", "src/main/resources/generator/dependencies/svelte/**"],
+  "docker-compose": {
+    "fileMatch": ["^src/main/docker/[^/]*\\.ya?ml$"]
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["node"],
+      "allowedVersions": "<23.0.0"
+    }
+  ]
+}

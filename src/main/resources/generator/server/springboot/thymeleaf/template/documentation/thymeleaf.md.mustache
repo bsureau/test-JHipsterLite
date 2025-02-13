@@ -1,0 +1,30 @@
+# Getting Started
+
+### Reference Documentation
+
+- [Thymeleaf](https://www.thymeleaf.org)
+
+### Guides
+
+The following guides illustrate how to use some features concretely:
+
+- [Handling Form Submission](https://spring.io/guides/gs/handling-form-submission/)
+- [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
+- [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
+- [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
+
+# Live reload setup
+
+This project uses NPM and spring-boot-devtools module to have live reloading.
+
+Use the following steps to get it working:
+
+1. Run the Spring Boot application with the `default` profile: `./mvnw`
+2. From a terminal, run `npm run build && npm run watch` (You can also run `npm run --silent build && npm run --silent watch` if you want less output in the terminal)
+3. Your default browser will open at http://localhost:3000
+
+You should now be able to change any HTML or CSS and have the browser reload upon saving the file.
+
+NOTE: If you use a separate authentication server (e.g., social logins, or Keycloak) then after login,
+you might get redirected to http://localhost:{{serverPort}} as opposed to http://localhost:3000.
+Be sure to set the port back to `3000` in your browser to have live reload.

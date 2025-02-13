@@ -1,0 +1,7 @@
+mixin jhlite-select(opts)
+  - const { disabled } = opts || {};
+  select.jhlite-select(disabled=disabled)
+    option(value='') Select a preset...
+    option(value='preset.name') Java Library with Maven
+    option(value='preset.name') Webapp: Vue + Spring Boot
+    option(value='preset.name') JHLite Extension with Maven

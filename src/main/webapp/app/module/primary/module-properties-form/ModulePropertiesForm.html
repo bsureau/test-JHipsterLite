@@ -1,0 +1,78 @@
+<div class="jhipster-module-properties jhlite-vertical-space -paragraph">
+  <div class="jhlite-vertical-space--line">
+    <h2 class="jhipster-modules-properties-form--properties-title">Properties</h2>
+  </div>
+  <div class="jhlite-vertical-space--line">
+    <div class="jhlite-field">
+      <div class="jhlite-field--label">
+        <label for="folder-path" class="jhlite-input">Project folder</label>
+      </div>
+      <div class="jhlite-field--field">
+        <input
+          type="text"
+          id="folder-path"
+          class="jhlite-input-text"
+          data-testid="folder-path-field"
+          :value="folderPath"
+          @input="updateFolderPath($event.target.value)"
+          @blur="folderPathSelected()"
+        />
+      </div>
+    </div>
+  </div>
+  <div class="jhlite-vertical-space--line" v-for="property in properties">
+    <div class="jhlite-field">
+      <div class="jhlite-field--label">
+        <label :for="`module-parameter-${property.key}`" class="jhlite-label">
+          <span>{{ property.description }}</span> -&nbsp;<strong>{{ property.key }}</strong>
+        </label>
+      </div>
+      <div class="jhlite-field--field">
+        <input
+          type="text"
+          class="jhlite-input-text"
+          :id="`module-parameter-${property.key}`"
+          :placeholder="property.defaultValue"
+          @input="setStringProperty(property.key, $event.target.value)"
+          :value="parameters.get(property.key)"
+          :data-testid="`parameter-${property.key}-field`"
+          v-if="property.type === 'STRING'"
+        />
+        <input
+          type="number"
+          class="jhlite-input-text"
+          :id="`module-parameter-${property.key}`"
+          :placeholder="property.defaultValue"
+          @input="setNumberProperty(property.key, $event.target.value)"
+          :value="parameters.get(property.key)"
+          :data-testid="`parameter-${property.key}-field`"
+          v-if="property.type === 'INTEGER'"
+        />
+        <select
+          class="jhipster-modules-properties-form--field"
+          :id="`module-parameter-${property.key}`"
+          @change="setBooleanProperty(property.key, $event.target.value)"
+          :data-testid="`parameter-${property.key}-field`"
+          v-if="property.type === 'BOOLEAN'"
+        >
+          <option value="" :selected="parameters.get(property.key) === undefined"></option>
+          <option value="true" :selected="parameters.get(property.key) === true">Yes</option>
+          <option value="false" :selected="parameters.get(property.key) === false">No</option>
+        </select>
+      </div>
+      <div class="jhlite-field--optional" :data-testid="`parameter-${property.key}-optional-marker`" v-if="!property.mandatory">
+        Optional
+      </div>
+    </div>
+  </div>
+  <div class="jhlite-vertical-space--line">
+    <input
+      type="checkbox"
+      id="commit-modules"
+      @click="updateModuleCommit($event.target.checked)"
+      data-testid="commit-module-application"
+      checked="checked"
+    />
+    <label for="commit-modules" class="jhipster-modules-properties-form--commit-modules-label">Commit module application</label>
+  </div>
+</div>

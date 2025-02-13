@@ -1,0 +1,5 @@
+{
+  "rules": {
+    "isolate-ddl-changes": true
+  }
+}

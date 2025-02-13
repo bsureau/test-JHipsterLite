@@ -1,0 +1,48 @@
+package {{ packageName }}.shared.dependencies.infrastructure.secondary;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import {{ packageName }}.UnitTest;
+import tech.jhipster.lite.module.domain.ProjectFiles;
+import tech.jhipster.lite.module.domain.npm.NpmPackageName;
+import tech.jhipster.lite.module.domain.npm.NpmPackageVersion;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static {{ packageName }}.shared.dependencies.domain.{{ baseName }}NpmVersionSource.{{ baseNameUpperCased }};
+
+@UnitTest
+@ExtendWith(MockitoExtension.class)
+class {{ baseName }}NpmVersionReaderTest {
+
+  @Mock
+  private ProjectFiles projectFiles;
+
+  @InjectMocks
+  private {{ baseName }}NpmVersionReader reader;
+
+  @Test
+  void shouldGetVersionFromCustomSource() {
+    mockProjectFiles();
+
+    NpmPackageVersion version = reader.get().get(new NpmPackageName("vue"), {{ baseNameUpperCased }}.build());
+
+    assertThat(version).isEqualTo(new NpmPackageVersion("1.2.3"));
+  }
+
+  private void mockProjectFiles() {
+    when(projectFiles.readString(anyString())).thenReturn(
+      """
+      {
+        "dependencies": {
+          "vue": "1.2.3"
+        },
+      }
+      """
+    );
+  }
+}

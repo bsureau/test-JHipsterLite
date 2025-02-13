@@ -1,0 +1,555 @@
+name: build
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || (github.ref == 'refs/heads/main' && github.sha) || github.ref }}
+  cancel-in-progress: true
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  #------------------------------------------------------
+  # Setup values which is going to be used in other jobs
+  #------------------------------------------------------
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    outputs:
+      skip_ci: ${{ steps.check-ci-skip.outputs.skip_ci }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get the head commit message
+        id: commit-message
+        run: |
+          head_commit_message=$(git log -1 --no-merges --pretty=%B | tr '\n' ' ' | sed "s/'/'\\\\''/g")
+          echo head commit message: $head_commit_message
+          echo "message=$head_commit_message" >> $GITHUB_OUTPUT
+      - name: Prepare commit message and PR title
+        id: prepare-messages
+        env:
+          COMMIT_MESSAGE: ${{ steps.commit-message.outputs.message }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          commit_message=$(echo "$COMMIT_MESSAGE" | tr -cd '[:alnum:][:space:]\[\]')
+          pr_title=$(echo "$PR_TITLE" | tr -cd '[:alnum:][:space:]\[\]')
+          echo "commit_message=$commit_message" >> $GITHUB_OUTPUT
+          echo "pr_title=$pr_title" >> $GITHUB_OUTPUT
+      - name: Check for ci skip tags
+        id: check-ci-skip
+        run: |
+          commit_message='${{ steps.prepare-messages.outputs.commit_message }}'
+          pr_title='${{ steps.prepare-messages.outputs.pr_title }}'
+          skip_tags=('[ci ignore]' '[ignore ci]')
+
+          echo "Checking commit message and pr title for ci skip tags..."
+          skip_ci="false"
+
+          for tag in "${skip_tags[@]}"; do
+            if [[ "$commit_message" == *"$tag"* ]] || [[ "$pr_title" == *"$tag"* ]]; then
+              echo "Found ci skip tag '$tag'."
+              echo "skip_ci=true" >> $GITHUB_OUTPUT
+              skip_ci="true"
+              break
+            fi
+          done
+
+          if [[ "$skip_ci" == "false" ]]; then
+            echo "No ci skip tag found."
+            echo "skip_ci=false" >> $GITHUB_OUTPUT
+          fi
+  #--------------------------------------------------
+  # Build and Tests the project on Windows
+  #--------------------------------------------------
+  tests-windows:
+    name: tests-windows
+    needs: [setup]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    if: >-
+      needs.setup.outputs.skip_ci != 'true'
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: cache local Maven repository'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Test: run backend tests'
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        run: |
+          ./mvnw clean verify
+  #--------------------------------------------------
+  # Build and Tests the project on Linux
+  #--------------------------------------------------
+  tests-linux:
+    name: tests-linux
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: >-
+      needs.setup.outputs.skip_ci != 'true'
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: cache local Maven repository'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Lint: check'
+        run: npm run lint:ci
+      - name: 'Start local Sonar'
+        run: docker compose -f src/main/docker/sonar.yml up -d
+      - name: 'Test: run backend tests'
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify -Dsonar.qualitygate.wait=true sonar:sonar -Dorg.slf4j.simpleLogger.log.develocity.goal.cache=debug
+      - name: 'Analysis: local Sonar'
+        run: |
+          ./tests-ci/sonar.sh
+      - name: 'Analysis: SonarCloud'
+        if: github.repository == 'jhipster/jhipster-lite' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./mvnw initialize sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.projectKey=jhipster_jhipster-lite -Dsonar.organization=jhipster -Dsonar.login= -Dsonar.password=
+      - name: 'Artifact: remove unused JARs'
+        run: |
+          rm target/*-javadoc.jar target/*-sources.jar
+      - name: 'Artifact: upload JAR'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jhlite-jar
+          path: '${{ github.workspace }}/target/*.jar'
+          retention-days: 1
+  #------------------------------------------------------
+  # Build and Upload *.jar from main branch on Linux
+  #------------------------------------------------------
+  generate-main-branch-jar:
+    name: generate-main-branch-jar
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: >-
+      needs.setup.outputs.skip_ci != 'true' &&
+      github.event_name == 'pull_request'
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+          fetch-depth: 0
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: cache local Maven repository'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Build application JAR'
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+      - name: 'Artifact: upload JAR'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jhlite-main-jar
+          path: '${{ github.workspace }}/target/*.jar'
+          retention-days: 1
+  #--------------------------------------------------
+  # Cypress
+  #--------------------------------------------------
+  cypress:
+    needs: [tests-linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Artifact: download JAR'
+        uses: actions/download-artifact@v4
+        with:
+          name: jhlite-jar
+          path: ./tests-ci/
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Test: start application JHipster Lite'
+        working-directory: ./tests-ci/
+        run: |
+          ./start.sh 7471
+      - name: 'Test: launch Cypress'
+        run: npm run e2e:headless
+
+  #--------------------------------------------------
+  # Tests generated projects
+  #--------------------------------------------------
+  generation:
+    needs: [setup, tests-linux, generate-main-branch-jar]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: >-
+      !cancelled() &&
+      needs.setup.outputs.skip_ci != 'true' &&
+      needs.tests-linux.result == 'success' &&
+      (needs.generate-main-branch-jar.result == 'success' ||
+      needs.generate-main-branch-jar.result == 'skipped')
+    strategy:
+      matrix:
+        app:
+          - fullappmaven
+          - fullappgradle
+          - oauth2app
+          - mysqlapp
+          - mariadbapp
+          - mssqlapp
+          - flywayapp
+          - undertowapp
+          - eurekaapp
+          - consulapp
+          - gatewayapp
+          - mongodbapp
+          - redisapp
+          - cassandraapp
+          - neo4japp
+          - angularapp
+          - reactapp
+          - vuejwtapp
+          - vueoauth2app
+          - kafkaapp
+          - pulsarapp
+          - reactiveapp
+          - angularoauth2app
+          - customjhlite
+          - typescriptapp
+          - thymeleafapp
+          - langchain4japp
+        include:
+          - java-build-tool: maven
+          - spring-config-format: yaml
+          - java-version: 21
+          - node-version: 'lts/*'
+          - app: mariadbapp
+            spring-config-format: properties
+          - app: consulapp
+            java-version: 23
+          - app: vuejwtapp
+            node-version: 'latest'
+          - app: fullappgradle
+            java-build-tool: gradle
+    steps:
+      - name: 'Setup: checkout project from main branch'
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+          path: 'main-branch'
+      - name: 'Setup: environment from main branch'
+        if: github.event_name == 'pull_request'
+        id: setup-main
+        uses: ./main-branch/.github/actions/setup
+      - name: 'Artifact: download JAR from main branch'
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          name: jhlite-main-jar
+          path: ./main-branch/tests-ci/
+      - name: 'Generation: generate ${{ matrix.app }} from main branch'
+        if: github.event_name == 'pull_request'
+        working-directory: ./main-branch/tests-ci/
+        continue-on-error: true
+        id: generate-main
+        run: |
+          # Set up trap to ensure stop.sh is called on exit
+          trap './stop.sh' EXIT
+
+          ./start.sh 7471
+          ./generate.sh ${{ matrix.app }} ${{ matrix.java-build-tool }} ${{ matrix.spring-config-format }}
+          GENERATE_EXIT_CODE=$?
+          echo "exit_code=$GENERATE_EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $GENERATE_EXIT_CODE
+      - name: 'Generation: calculate md5sum ${{ matrix.app }} from main branch'
+        if: github.event_name == 'pull_request'
+        id: calculate-md5sum-main
+        run: |
+          if [ -d "/tmp/jhlite/${{ matrix.app }}" ] && [ "${{ steps.generate-main.outputs.exit_code }}" == "0" ]; then
+            cd /tmp/jhlite/${{ matrix.app }}/
+            app_md5=$(find . \
+              -not -path './.git/*' \
+              -not -path './.github/*' \
+              -not -path './.jhipster/*' \
+              -not -path './node_modules/*' \
+              -not -path './target/*' \
+              -not -path './build/*' \
+              -type f -exec md5sum {} + | LC_ALL=C sort | md5sum | head -n1 | cut -d " " -f1)
+            echo "hash=$app_md5" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "main branch hash from project ${{ matrix.app }} $app_md5"
+          else
+            echo "App does not exist in main branch or generation failed"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      - name: 'Clean: delete ${{ matrix.app }} from main branch'
+        if: github.event_name == 'pull_request'
+        run: |
+          rm -rf /tmp/jhlite/${{ matrix.app }}
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v4
+        with:
+          path: 'current-branch'
+      - name: 'Setup: environment (java: ${{ matrix.java-version }}, node: ${{ matrix.node-version }})'
+        id: setup
+        uses: ./current-branch/.github/actions/setup
+        with:
+          java-version: ${{ matrix.java-version }}
+          node-version: ${{ matrix.node-version }}
+      - name: 'Artifact: download JAR'
+        uses: actions/download-artifact@v4
+        with:
+          name: jhlite-jar
+          path: ./current-branch/tests-ci/
+      - name: 'Generation: generate ${{ matrix.app }}'
+        working-directory: ./current-branch/tests-ci/
+        run: |
+          ./start.sh 7471
+          ./generate.sh ${{ matrix.app }} ${{ matrix.java-build-tool }} ${{ matrix.spring-config-format }}
+          ./stop.sh
+      - name: 'Generation: calculate md5sum ${{ matrix.app }}'
+        if: github.event_name == 'pull_request' && steps.calculate-md5sum-main.outputs.exists == 'true'
+        id: calculate-md5sum
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          app_md5=$(find . \
+            -not -path './.git/*' \
+            -not -path './.github/*' \
+            -not -path './.jhipster/*' \
+            -not -path './node_modules/*' \
+            -not -path './target/*' \
+            -not -path './build/*' \
+            -type f -exec md5sum {} + | LC_ALL=C sort | md5sum | head -n1 | cut -d " " -f1)
+          echo pull request branch hash from project ${{ matrix.app }} $app_md5
+          echo "hash=$app_md5" >> $GITHUB_OUTPUT
+          ls -al /tmp/jhlite/${{ matrix.app }}
+      - name: 'Compare hash main x pull request ${{ matrix.app }}'
+        if: github.event_name == 'pull_request' && steps.calculate-md5sum-main.outputs.exists == 'true'
+        id: compare-hash
+        run: |
+          echo "main branch hash from project ${{ matrix.app }} ${{ steps.calculate-md5sum-main.outputs.hash }}"
+          echo "pull request branch hash from project ${{ matrix.app }} ${{ steps.calculate-md5sum.outputs.hash }}"
+          if [ "${{ steps.calculate-md5sum-main.outputs.hash }}" != "${{ steps.calculate-md5sum.outputs.hash }}" ]; then
+            echo "different=true" >> $GITHUB_OUTPUT
+          else
+            echo "different=false" >> $GITHUB_OUTPUT
+          fi
+      - name: 'Determine if tests are needed'
+        id: tests-requirement-check
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "Not a PR - will run tests"
+            echo "execute_tests=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ steps.calculate-md5sum-main.outputs.exists }}" != "true" ]]; then
+            echo "App doesn't exist in main branch - will run tests"
+            echo "execute_tests=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ steps.compare-hash.outputs.different }}" == "true" ]]; then
+            echo "Hashes are different - will run tests"
+            echo "execute_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "Hashes are identical - will skip tests"
+            echo "execute_tests=false" >> $GITHUB_OUTPUT
+          fi
+      - name: 'Test: list ${{ matrix.app }}'
+        if: |
+          steps.tests-requirement-check.outputs.execute_tests == 'true' &&
+          matrix.java-build-tool == 'maven'
+        id: cache_maven_md5sum
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          ls -al
+          MD5SUM_POM_XML=$(md5sum pom.xml | cut -d ' ' -f 1)
+          echo $MD5SUM_POM_XML
+          echo "md5sum_pom_xml=${MD5SUM_POM_XML}" >> $GITHUB_OUTPUT
+      - name: 'Init: cache local Maven repository'
+        if: |
+          steps.tests-requirement-check.outputs.execute_tests == 'true' &&
+          matrix.java-build-tool == 'maven'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-${{ matrix.java-build-tool }}-${{ matrix.app }}-${{ steps.cache_maven_md5sum.outputs.md5sum_pom_xml }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.java-build-tool }}-
+      - name: 'Test: list ${{ matrix.app }}'
+        if: |
+          steps.tests-requirement-check.outputs.execute_tests == 'true' &&
+          matrix.java-build-tool == 'gradle'
+        id: cache_gradle_md5sum
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          ls -al
+          GRADLE_DEPS_MD5=$(md5sum \
+            build.gradle.kts \
+            settings.gradle.kts \
+            gradle/libs.versions.toml \
+            gradle/wrapper/gradle-wrapper.properties \
+            | md5sum | head -n1 | cut -d " " -f1)
+          echo $GRADLE_DEPS_MD5
+          echo "md5sum=${GRADLE_DEPS_MD5}" >> $GITHUB_OUTPUT
+      - name: 'Init: cache local Gradle repository'
+        if: |
+          steps.tests-requirement-check.outputs.execute_tests == 'true' &&
+          matrix.java-build-tool == 'gradle'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ matrix.java-build-tool }}-${{ matrix.app }}-${{ steps.cache_gradle_md5sum.outputs.md5sum }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.java-build-tool }}-
+      - name: 'Test: starting Sonar'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          if [ -f 'src/main/docker/sonar.yml' ]; then
+            docker compose -f src/main/docker/sonar.yml up -d
+            ${{ github.workspace }}/current-branch/tests-ci/wait_sonar.sh
+            docker ps -a
+          fi
+      - name: 'Install jhlite snapshot jar in local maven repository'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: ./current-branch/
+        run: |
+          export JHLITE_VERSION=$(find tests-ci -maxdepth 1 -name "*-tests.jar" | sed -e 's/.*jhlite-\(.*\)-tests\.jar/\1/')
+          echo "JHLITE_VERSION=${JHLITE_VERSION}"
+          ./mvnw install:install-file -Dfile=tests-ci/jhlite-${JHLITE_VERSION}.jar -DgroupId=tech.jhipster.lite -DartifactId=jhlite -Dversion=${JHLITE_VERSION}
+          ./mvnw install:install-file -Dfile=tests-ci/jhlite-${JHLITE_VERSION}-tests.jar -DgroupId=tech.jhipster.lite -DartifactId=jhlite -Dversion=${JHLITE_VERSION} -Dclassifier=tests
+      - name: 'Test: verify ${{ matrix.app }}'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          if [ -f 'mvnw' ]; then
+            ./mvnw clean verify -Dsonar.qualitygate.wait=true sonar:sonar
+          elif [ -f 'gradlew' ]; then
+            ./gradlew clean build sonar --no-daemon --info
+          else
+            npm install
+            npm test
+          fi
+      - name: 'Test: run linter for ${{ matrix.app }}'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          if grep -q '"lint":' package.json; then
+            npm run lint
+          else
+            echo "No lint script in package.json found, skipping step."
+          fi
+      - name: 'Test: frontend component-tests for ${{ matrix.app }}'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          if grep -q "test:component" package.json; then
+            if grep -q "playwright" package.json; then
+              npx playwright install --with-deps
+            fi
+            npm run test:component:headless
+          else
+            echo "No frontend component tests found, skipping step."
+          fi
+      - name: 'Test: check local Sonar Analysis'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        run: |
+          if [ -f '/tmp/jhlite/${{ matrix.app }}/src/main/docker/sonar.yml' ]; then
+            ./current-branch/tests-ci/sonar.sh ${{ matrix.app }}
+          fi
+      - name: 'Test: copy shell scripts'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        run: cp ./current-branch/tests-ci/start.sh /tmp/jhlite/${{ matrix.app }}/
+      - name: 'Test: start docker-compose services'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: ./current-branch/tests-ci/
+        run: |
+          ./start_docker_compose.sh /tmp/jhlite/${{ matrix.app }}/
+      - name: 'Test: start the application'
+        if: steps.tests-requirement-check.outputs.execute_tests == 'true'
+        working-directory: /tmp/jhlite/${{ matrix.app }}/
+        run: |
+          if [ -f 'mvnw' ] || [ -f 'gradlew' ]; then
+            ./start.sh
+          fi
+
+  #--------------------------------------------------
+  # Configuration for Status checks that are required
+  #--------------------------------------------------
+  status-checks:
+    name: status-checks
+    needs: [tests-linux, generation]
+    permissions:
+      contents: none
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validation Status checks
+        run: |
+          echo 'Configuration for Status checks that are required'
+          echo '${{ toJSON(needs) }}'
+          if [[ (('skipped' == '${{ needs.tests-linux.result }}') || ('success' == '${{ needs.tests-linux.result }}')) && (('skipped' == '${{ needs.generation.result }}') || ('success' == '${{ needs.generation.result }}')) ]]; then
+            exit 0
+          fi
+          exit 1
+
+  #--------------------------------------------------
+  # Dependabot auto merge PR
+  #--------------------------------------------------
+  dependabot-auto-merge:
+    name: dependabot-auto-merge
+    needs: [cypress, generation]
+    permissions:
+      pull-requests: write
+      contents: write
+    runs-on: ubuntu-latest
+    if: github.repository == 'jhipster/jhipster-lite' && github.ref != 'refs/heads/main' && github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v2.3.0
+      - name: Enable auto-merge for Dependabot PRs
+        if: steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

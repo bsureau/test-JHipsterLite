@@ -1,0 +1,13 @@
+@use '../../quark/placeholder';
+
+.paragraph {
+  margin: 0;
+  padding: 0;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+
+  @include placeholder.placeholder-alternative {
+    min-height: var(--font-size);
+  }
+}

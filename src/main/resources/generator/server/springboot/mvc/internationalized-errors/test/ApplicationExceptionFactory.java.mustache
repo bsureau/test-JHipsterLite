@@ -1,0 +1,12 @@
+package {{ packageName }}.shared.error.infrastructure.primary;
+
+import {{ packageName }}.shared.error.domain.{{ baseName }}Exception;
+
+public final class {{ baseName }}ExceptionFactory {
+
+  private {{ baseName }}ExceptionFactory() {}
+
+  public static {{ baseName }}Exception buildEmptyException() {
+    return {{ baseName }}Exception.builder(null).build();
+  }
+}

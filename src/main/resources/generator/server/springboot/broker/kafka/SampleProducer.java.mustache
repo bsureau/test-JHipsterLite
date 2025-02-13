@@ -1,0 +1,42 @@
+package {{packageName}}.sample.infrastructure.secondary.kafka.producer;
+
+import java.util.concurrent.Future;
+import jakarta.annotation.PostConstruct;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class SampleProducer {
+
+  private static final Logger log = LoggerFactory.getLogger(SampleProducer.class);
+
+  private final Producer<String, String> kafkaProducer;
+
+  private final String topicName;
+
+  public SampleProducer(@Value("${kafka.topic.sample}") String topicName, Producer<String, String> kafkaProducer) {
+    this.kafkaProducer = kafkaProducer;
+    this.topicName = topicName;
+  }
+
+  @PostConstruct
+  public void init() {
+    Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+  }
+
+  public Future<RecordMetadata> send(final String message) {
+    final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, message);
+    log.info("Sending asynchronously a String producerRecord to topic: '{}'", topicName);
+    return kafkaProducer.send(producerRecord);
+  }
+
+  public void shutdown() {
+    log.info("Shutdown Kafka producer");
+    kafkaProducer.close();
+  }
+}

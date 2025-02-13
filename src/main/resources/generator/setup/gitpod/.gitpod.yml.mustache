@@ -1,0 +1,32 @@
+github:
+  prebuilds:
+    addComment: false
+    addBadge: true
+
+ports:
+  - port: {{ serverPort }}
+  - port: 7471
+
+vscode:
+  extensions:
+    - vscjava.vscode-java-pack
+    - esbenp.prettier-vscode
+    - ms-azuretools.vscode-docker
+    - pivotal.vscode-boot-dev-pack
+    - ms-vscode.vscode-typescript-tslint-plugin
+    - angular.ng-template
+    - firsttris.vscode-jest-runner
+    - dbaeumer.vscode-eslint
+    - esbenp.prettier-vscode
+    - christian-kohler.npm-intellisense
+
+image:
+  file: .gitpod.Dockerfile
+
+# startup tasks
+tasks:
+  - name: 'Maven dependencies'
+    init: ./mvnw package -DskipTests
+
+  - name: 'Npm dependencies'
+    init: npm ci

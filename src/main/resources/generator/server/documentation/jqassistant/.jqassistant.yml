@@ -1,0 +1,15 @@
+jqassistant:
+  plugins:
+    - group-id: org.jqassistant.plugin
+      artifact-id: jqassistant-context-mapper-plugin
+      version: ${jqassistant-context-mapper-plugin.version}
+    # jhipster-needle-jqassistant-plugin
+
+  analyze:
+    concept:
+      # jhipster-needle-jqassistant-analyze-concept
+    groups:
+      # jhipster-needle-jqassistant-analyze-group
+    execute-applied-concepts: true
+    report:
+      continue-on-failure: true

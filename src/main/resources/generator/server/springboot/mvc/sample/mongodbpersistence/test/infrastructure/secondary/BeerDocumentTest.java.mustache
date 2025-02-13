@@ -1,0 +1,16 @@
+package {{packageName}}.sample.infrastructure.secondary;
+
+import static {{packageName}}.sample.domain.beer.BeersFixture.*;
+import static org.assertj.core.api.Assertions.*;
+
+import {{packageName}}.UnitTest;
+import org.junit.jupiter.api.Test;
+
+@UnitTest
+class BeerDocumentTest {
+
+  @Test
+  void shouldConvertFromAndToDomain() {
+    assertThat(BeerDocument.from(beer()).toDomain()).usingRecursiveComparison().isEqualTo(beer());
+  }
+}

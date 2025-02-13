@@ -1,0 +1,16 @@
+FROM sonarqube:10.7.0-community
+FROM consul:1.15.4
+FROM jhipster/consul-config-loader:v0.4.1
+FROM jhipster/jhipster-registry:v7.4.0
+FROM quay.io/keycloak/keycloak:26.1.2
+FROM mariadb:11.6.2
+FROM mongo:8.0.4
+FROM mysql:9.2.0
+FROM cassandra:5.0.3
+FROM mcr.microsoft.com/mssql/server:2022-latest
+FROM postgres:17.2
+FROM apache/kafka-native:3.9.0
+FROM tchiotludo/akhq:0.25.1
+FROM apachepulsar/pulsar:4.0.2
+FROM neo4j:2025.01.0-community
+FROM redis:7.4.2

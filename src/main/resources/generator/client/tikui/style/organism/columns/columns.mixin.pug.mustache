@@ -1,0 +1,10 @@
+mixin columns(gap, options)
+  - const { justify, align } = options || {};
+  - const justifyClass = justify ? `-justify-${justify}` : null;
+  - const alignClass = align ? `-align-${align}` : null;
+  .columns(class=[`-gap-${gap}`, justifyClass, alignClass, gapClass])
+    block
+
+mixin columns--column
+  .columns--column
+    block

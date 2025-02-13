@@ -1,0 +1,10 @@
+{
+  "name": "jhlite",
+  "version": "0.0.1",
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.18.1"
+  }
+}
