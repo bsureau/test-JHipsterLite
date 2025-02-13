@@ -9,6 +9,7 @@ import tech.jhipster.lite.shared.generation.domain.ExcludeFromGeneratedCodeCover
 
 public class JHipsterDestination {
 
+  public static final JHipsterDestination SRC_MAIN_NESTJS = new JHipsterDestination("src");
   public static final JHipsterDestination SRC_MAIN_JAVA = new JHipsterDestination("src/main/java");
   public static final JHipsterDestination SRC_TEST_JAVA = new JHipsterDestination("src/test/java");
   public static final JHipsterDestination SRC_MAIN_DOCKER = new JHipsterDestination("src/main/docker");

@@ -8,6 +8,7 @@ public enum JHLiteFeatureSlug implements JHipsterFeatureSlugFactory {
   AUTHENTICATION_SPRINGDOC("authentication-springdoc"),
   JCACHE("jcache"),
   CLIENT_CORE("client-core"),
+  SERVER_CORE("server-core"),
   CLIENT_INTERNATIONALIZATION("client-internationalization"),
   CUCUMBER_AUTHENTICATION("cucumber-authentication"),
   DATASOURCE("datasource"),

@@ -1,0 +1,8 @@
+{
+  "name": "jhlite-dependencies",
+  "version": "0.0.0",
+  "description": "JHipster Lite : used for NestJS dependencies",
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {}
+}
