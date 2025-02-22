@@ -103,6 +103,7 @@ public enum JHLiteModuleSlug implements JHipsterModuleSlugFactory {
   PROTOBUF_BACKWARDS_COMPATIBILITY_CHECK("protobuf-backwards-compatibility-check"),
   REACT_CORE("react-core"),
   NESTJS_CORE("nestjs-core"),
+  KATAS_TS_VITEST("katas-ts-vitest"),
   REACT_I18N("react-i18next"),
   REACT_JWT("react-jwt"),
   REDIS("redis"),
