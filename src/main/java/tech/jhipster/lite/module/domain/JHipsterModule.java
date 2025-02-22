@@ -263,6 +263,10 @@ public final class JHipsterModule {
     return new JHipsterDestination(destination);
   }
 
+  public static JHipsterDestination toSrcMainNestJs() {
+    return JHipsterDestination.SRC_MAIN_NESTJS;
+  }
+
   public static JHipsterDestination toSrcMainJava() {
     return JHipsterDestination.SRC_MAIN_JAVA;
   }
